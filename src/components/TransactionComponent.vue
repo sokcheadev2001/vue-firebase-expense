@@ -8,7 +8,7 @@
     >
       {{ transaction.text }}
       <span>{{ transaction.amount }}</span>
-      <button class="delete-btn">x</button>
+      <button @click.prevent="handleRemoveTransaction(transaction.id)" class="delete-btn">x</button>
     </li>
   </ul>
 </template>
@@ -18,9 +18,14 @@ interface ITransaction {
   id: number
   text: string
   amount: number
-} 
+}
 
 defineProps<{
   transactions: Array<ITransaction>
 }>()
+
+const emit = defineEmits(['removeTransaction'])
+function handleRemoveTransaction(id: number) {
+  emit('removeTransaction', id)
+}
 </script>
