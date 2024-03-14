@@ -4,10 +4,15 @@ This is a small project using Vue js with Firebase to store transactions. This i
 
 ## Technology
 
-
 [Vue Js](https://vuejs.org//) + [Firebase](https://firebase.google.com/)
 
 ## Getting started
+
+```sh
+cp .env.example .env
+```
+
+### Install Dependencies
 
 ```sh
 npm install
