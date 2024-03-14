@@ -101,6 +101,10 @@ input[type='number'] {
   width: 100%;
 }
 
+button:disabled {
+  background-color: #bbb;
+}
+
 .btn:focus,
 .delete-btn:focus {
   outline: 0;

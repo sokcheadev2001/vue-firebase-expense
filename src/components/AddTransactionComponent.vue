@@ -12,7 +12,7 @@
       >
       <input v-model="amount" type="number" id="amount" placeholder="Enter amount..." />
     </div>
-    <button class="btn">Add transaction</button>
+    <button :disabled="posting" class="btn">Add transaction</button>
   </form>
 </template>
 
@@ -23,7 +23,7 @@ const text = ref('')
 const amount = ref('')
 
 const emit = defineEmits(['addTransaction'])
-const props = defineProps(['toast'])
+const props = defineProps(['toast', 'posting'])
 
 function handleSubmit() {
   if (!text.value || !amount.value) {

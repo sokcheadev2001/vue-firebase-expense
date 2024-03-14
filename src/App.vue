@@ -7,14 +7,23 @@
       :transactions="transactions"
       @removeTransaction="handleDeleteTransaction"
     />
-    <AddTransactionComponent @addTransaction="handleAddTransaction" :toast="toast" />
+    <AddTransactionComponent
+      @addTransaction="handleAddTransaction"
+      :toast="toast"
+      :posting="posting"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useToast } from 'vue-toastification'
-import { AUTO_INCREMENT, INITIAL_ID } from './utils/constant'
+import type { ITransaction } from './domain/transaction/interface'
+import {
+  createTransaction,
+  deleteTransaction,
+  getTransactions
+} from './services/transaction.service'
 
 import HeaderComponent from './components/HeaderComponent.vue'
 import BalanceComponent from './components/BalanceComponent.vue'
@@ -22,14 +31,19 @@ import IncomeExpenseComponent from './components/IncomeExpenseComponent.vue'
 import TransactionComponent from './components/TransactionComponent.vue'
 import AddTransactionComponent from './components/AddTransactionComponent.vue'
 
-interface ITransaction {
-  id: number
-  text: string
-  amount: number
-}
-
 const toast = useToast()
 const transactions = ref<ITransaction[]>([])
+const posting = ref(false)
+
+onMounted(async () => {
+  const transactionsData = await getTransactions()
+
+  if (transactionsData) {
+    transactionsData.forEach((item) => {
+      transactions.value.push({ ...(item.data() as ITransaction), id: item.id })
+    })
+  }
+})
 
 // Get Total
 const total = computed(() => {
@@ -40,49 +54,58 @@ const total = computed(() => {
 
 // Get Income
 const income = computed(() => {
-  return parseInt(
-    transactions.value
-      .filter((transaction) => transaction.amount > 0)
-      .reduce((acc, transaction) => {
-        return acc + transaction.amount
-      }, 0)
-      .toFixed(2)
-  )
+  return transactions.value
+    .filter((transaction) => transaction.amount > 0)
+    .reduce((acc, transaction) => {
+      return acc + transaction.amount
+    }, 0)
 })
 
 // Get Expense
 const expense = computed(() => {
-  return parseInt(
-    transactions.value
-      .filter((transaction) => transaction.amount < 0)
-      .reduce((acc, transaction) => {
-        return acc + transaction.amount
-      }, 0)
-      .toFixed(2)
-  )
+  return transactions.value
+    .filter((transaction) => transaction.amount < 0)
+    .reduce((acc, transaction) => {
+      return acc + transaction.amount
+    }, 0)
 })
 
-function handleAddTransaction(transaction: ITransaction) {
-  transactions.value.push({
-    id: generateUniqueId(),
-    text: transaction.text,
-    amount: transaction.amount
-  })
+async function handleAddTransaction(transaction: ITransaction) {
+  try {
+    posting.value = true
 
-  toast.success('Successfully added ✅')
-}
+    const { id } = await createTransaction({
+      text: transaction.text,
+      amount: transaction.amount
+    })
 
-function handleDeleteTransaction(id: number) {
-  transactions.value = transactions.value.filter((transaction) => transaction.id !== id)
-  toast.success('Transaction deleted 🔥')
-}
+    if (id) {
+      posting.value = false
+      transactions.value.push({
+        id: id,
+        text: transaction.text,
+        amount: transaction.amount
+      })
 
-function generateUniqueId() {
-  const lastId = transactions.value[transactions.value.length - 1]?.id
-  if (lastId) {
-    return lastId + AUTO_INCREMENT
+      toast.success('Successfully added ✅')
+    }
+  } catch (error) {
+    console.log(error)
+    toast.error('Something went wrong 💥')
+  } finally {
+    posting.value = false
   }
+}
 
-  return INITIAL_ID
+async function handleDeleteTransaction(id: string) {
+  try {
+    await deleteTransaction(id)
+    transactions.value = transactions.value.filter((transaction) => transaction.id !== id)
+
+    toast.success('Transaction deleted 🔥')
+  } catch (error) {
+    console.log(error)
+    toast.error('Something went wrong 💥')
+  }
 }
 </script>

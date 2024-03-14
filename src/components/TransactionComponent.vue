@@ -14,18 +14,14 @@
 </template>
 
 <script setup lang="ts">
-interface ITransaction {
-  id: number
-  text: string
-  amount: number
-}
+import type { ITransaction } from '@/domain/transaction/interface'
 
 defineProps<{
   transactions: Array<ITransaction>
 }>()
 
 const emit = defineEmits(['removeTransaction'])
-function handleRemoveTransaction(id: number) {
+function handleRemoveTransaction(id: string) {
   emit('removeTransaction', id)
 }
 </script>
